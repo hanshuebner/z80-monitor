@@ -1,10 +1,5 @@
-#IFNDEF	CONSTANTS
-#DEFINE	CONSTANTS
-
-EOS					.EQU	$00		; End Of String
-CR					.EQU	$0d		; Carriage Return (ENTER)
-LF					.EQU	$0a		; Line Feed
-SPACE				.EQU	$20		; Space
-TAB					.EQU	$09		; Tabulator
-
-#ENDIF
+EOS:    equ	$00		; End Of String
+CR:     equ	$0d		; Carriage Return (ENTER)
+LF:     equ	$0a		; Line Feed
+SPACE:  equ	$20		; Space
+TAB:    equ	$09		; Tabulator
