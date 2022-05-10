@@ -1,11 +1,12 @@
 ; inspiration (with many others): https://github.com/lmaurits/lm512
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;           CONSTANTS            ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 LED_PORT:     equ   $00
 
 
-BOTTOM_OF_STACK: equ $ffff          ; "top" stack adress
+BOTTOM_OF_STACK: equ $fcff          ; "top" stack adress
 
 BOOT_FLAG_WARM:  equ    $AA
 
@@ -15,15 +16,22 @@ BOOT_FLAG_WARM:  equ    $AA
 ;;             CODE               ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+        org     $0000
 ; Excecution starts here
-                org $0000
-                DI                                  ; disable interrupts
-                jr      initialize                  ; skip reset vector(s)
-                
-;;;;;;;;;; AREA FOR RESET VECTORS AND SO ON HERE ;;;;;;;;;;;;
-                org    $0030
-rst30:          jp      monitor_enter               ; breakpoint reset vector
+        DI                                  ; disable interrupts
+        jp      initialize                  ; skip rst vectors
+        ds      4
+rst08:  ds      8
+rst10:  ds      8
+rst18:  ds      8
+rst20:  ds      8
+rst28:  ds      8
+rst30:  jp      monitor_enter               ; breakpoint reset vector
+        ds      5
+rst38:  ds      8
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        ds      $c0
 
 initialize:     ld      sp, BOTTOM_OF_STACK         ; set up stack pointer 
                 
@@ -213,7 +221,6 @@ str_regdump_index:  db     "IX    IY", CR, LF, EOS
               include "sio_driver.asm"
               include "cf_driver.asm"
                 
-                
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; wait function  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -254,36 +261,6 @@ str_commands: DB    " Available Commands are: \r\n"
               DB    "    cont - continue excecution\r\n"
               db 0
 
-;// TODO: MOVE THIS TO ITS OWN "RAM"-FILE
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;           VARIABLES            ;;
-;;  BLOCK n, reserves n bytes and ;;
-;;  the label gets the value of   ;;
-;;  the first address             ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-boot_flag:      DB     0                       ; boot flag
-
-argc:         ds 1              ; holds number of arguments
-argv:         ds 16*2           ; array of pointers to the respective arguments (16 arguments = 32 bytes in size, see below)
-str_buffer:     ds  128                     ; a string buffer
-
-; temporary stack storage space
-
-mon_reg_stack:      org    $+20                ; register stack for storing the register contents while in the monitor (BREAKPOINT)
-                                                ; 20 bytes: A F B C D E H L + A' F' B' C' D' E' H' L' + IX IY
-
-                    org    $+1                 ; PADDING: needed to advance the instruction pointer  to the next byte when using .BLOCK below
-
-mon_reg_rtn_addr:   DS  2                   ; stores the return address (just for displaying purposes)
-mon_stack_backup:   DS  2                   ; just a backup variable to not mess up the original stack pointer while saving/restoring
-
-cf_sector_buffer:   DS  512                 ; a temporary location to load a sector from the CF card into
-
-END_OF_PROGRAM:  equ    ($ + 0FFH) & 0FF00H   ; next 256 byte boundary
-
-; .ECHO "END_OF_PROGRAM: "
-; .ECHO END_OF_PROGRAM
-; .ECHO "\n"
-
+              include "ram.asm"
               END

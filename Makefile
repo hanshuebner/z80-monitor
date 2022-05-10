@@ -10,4 +10,4 @@ z80-monitor.bin: src/*.asm
 .SUFFIXES: .bin .asm
 
 .asm.bin:
-	z80asm -Isrc/ -o $@ $<
+	z80asm -l -Isrc/ -o $@ $<
