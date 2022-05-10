@@ -5,7 +5,7 @@
 LED_PORT:     equ   $00
 
 
-BOTTOM_OF_STACK: equ $ffff          ; "top" stack adress at 4 KB
+BOTTOM_OF_STACK: equ $ffff          ; "top" stack adress
 
 BOOT_FLAG_WARM:  equ    $AA
 

@@ -4,24 +4,36 @@ SIO_A_DATA: equ    SIO_BASE + 0
 SIO_A_CTRL: equ    SIO_BASE + 1
 SIO_B_DATA: equ    SIO_BASE + 2
 SIO_B_CTRL: equ    SIO_BASE + 3
-
+ctc0:         equ   $84
+ctc1:         equ   $85
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Serial I/O-routines  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; sio_init: initializes the SIO/2 for serial communication
 ; affects: HL, B, C
-sio_init:       LD      B, 12                   ; load B with number of bytes (12)
-                LD      HL, sio_init_data       ; HL points to start of data
-                LD      C, SIO_A_CTRL           ; I/O-port for write
-                OTIR                            ; block write of B bytes to [C] starting from HL
-                ret
+sio_init:
+              ;; set up ctc to generate 1200 bps clock
+              ld    a, %00000101
+              out   (ctc0), a
+              ld    a, 169
+              out   (ctc0), a
+              ld    a, %00000101
+              out   (ctc1), a
+              ld    a, 169
+              out   (ctc1), a
+              ;; set up SIO
+              LD    B, 12           ; load B with number of bytes (12)
+              LD    HL, sio_init_data ; HL points to start of data
+              LD    C, SIO_A_CTRL   ; I/O-port for write
+              OTIR                  ; block write of B bytes to [C] starting from HL
+              ret
 
 sio_init_data:  db     $00, %00110000          ; write to WR0: error reset
                 db     $00, %00011000          ; write to WR0: channel reset
                 db     $01, %00000000          ; write to WR1: no interrupts enabled
                 db     $03, %11000001          ; write to WR3: enable RX 8bit
-                db     $04, %00000100          ; write to WR4: clkx1,1 stop bit, no parity
+                db     $04, %00000100          ; write to WR4: clkx1, 1 stop bit, no parity
                 db     $05, %01101000          ; write to WR5: DTR inactive, enable TX 8bit, BREAK off, TX on, RTS inactive
 
 
